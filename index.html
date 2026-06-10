@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encodeur / Décodeur Neon</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: radial-gradient(circle at top, #111133, #000);
+    color: #00ffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+}
+
+h1 {
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    background: rgba(0,0,40,0.6);
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #00ffff;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+    background: black;
+    color: #00ffff;
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+}
+
+button {
+    margin-top: 10px;
+    margin-right: 10px;
+    padding: 10px 20px;
+    background: black;
+    color: #00ffff;
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00ffff;
+    color: black;
+}
+
+.output {
+    margin-top: 15px;
+    min-height: 80px;
+    background: black;
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    padding: 10px;
+    word-break: break-all;
+}
+</style>
+</head>
+<body>
+
+<h1>ENCODEUR / DÉCODEUR NEON</h1>
+
+<div class="container">
+    <h2>Écrire une phrase</h2>
+    <textarea id="inputText" placeholder="Écris ta phrase ici..."></textarea>
+    <button onclick="encodeText()">Encoder</button>
+    <div id="encodedOutput" class="output"></div>
+</div>
+
+<div class="container">
+    <h2>Décoder un code</h2>
+    <textarea id="encodedInput" placeholder="Colle le code ici..."></textarea>
+    <button onclick="decodeText()">Décoder</button>
+    <div id="decodedOutput" class="output"></div>
+</div>
+
+<script>
+function encodeText() {
+    const text = document.getElementById("inputText").value;
+    const output = document.getElementById("encodedOutput");
+
+    try {
+        const encoded = btoa(unescape(encodeURIComponent(text)));
+        output.textContent = encoded;
+    } catch (e) {
+        output.textContent = "Erreur d'encodage";
+    }
+}
+
+function decodeText() {
+    const text = document.getElementById("encodedInput").value;
+    const output = document.getElementById("decodedOutput");
+
+    try {
+        const decoded = decodeURIComponent(escape(atob(text)));
+        output.textContent = decoded;
+    } catch (e) {
+        output.textContent = "Code invalide";
+    }
+}
+</script>
+
+</body>
+</html>
