@@ -2,17 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Brainrot Studio</title>
 
 <style>
+
 body{
     margin:0;
-    background:black;
-    font-family:Arial;
+    background:#000;
+    font-family:Arial,sans-serif;
 }
 
-/* 🗑️ POUBELLE */
+/* =======================
+   POUBELLE
+======================= */
+
 #trash{
     height:60px;
     background:#222;
@@ -20,57 +25,92 @@ body{
     display:flex;
     align-items:center;
     justify-content:center;
+    font-size:22px;
 }
-#trash.active{ background:red; }
 
-/* TOOLBAR */
+#trash.active{
+    background:red;
+}
+
+/* =======================
+   TOOLBAR
+======================= */
+
 .toolbar{
     background:#111;
     padding:10px;
     display:flex;
     gap:10px;
+    flex-wrap:wrap;
 }
 
-/* PAGE A4 PAYSAGE */
+.toolbar button{
+    cursor:pointer;
+}
+
+/* =======================
+   PAGE
+======================= */
+
 #page{
     width:990px;
     height:700px;
+
     background:white;
+
     margin:20px auto;
+
     position:relative;
+
     overflow:hidden;
 }
 
-/* GRILLE */
+/* =======================
+   GRILLE
+======================= */
+
 .fold{
     position:absolute;
     background:red;
     pointer-events:none;
     z-index:1;
 }
-.v{ width:2px; height:100%; top:0; }
-.h{ height:2px; width:100%; left:0; }
 
-/* ITEMS */
+.v{
+    width:2px;
+    height:100%;
+    top:0;
+}
+
+.h{
+    height:2px;
+    width:100%;
+    left:0;
+}
+
+/* =======================
+   OBJETS
+======================= */
+
 .item{
     position:absolute;
     z-index:2;
-    transform-origin:center;
+
+    transform-origin:center center;
 }
 
-.text{
-    min-width:60px;
-    min-height:30px;
-    padding:5px;
-    cursor:move;
-    display:inline-block;
+.selected{
+    outline:2px solid #00aaff;
 }
+
+/* =======================
+   IMAGE
+======================= */
 
 .image{
     width:150px;
     height:150px;
     overflow:hidden;
-    cursor:move;
 }
 
 .image img{
@@ -80,48 +120,171 @@ body{
     pointer-events:none;
 }
 
-/* HANDLES */
-.handleW,.handleH{
+/* =======================
+   TEXTE
+======================= */
+
+.text{
+    width:160px;
+    height:60px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    overflow:hidden;
+
+    white-space:nowrap;
+
+    font-size:30px;
+
+    cursor:move;
+}
+
+/* =======================
+   HANDLES
+======================= */
+
+.handleW,
+.handleH{
     width:12px;
     height:12px;
+
     background:#2196f3;
+
     position:absolute;
 }
 
 .handleW{
     right:-6px;
     top:50%;
+
     transform:translateY(-50%);
+
     cursor:ew-resize;
 }
 
 .handleH{
-    bottom:-6px;
     left:50%;
+    bottom:-6px;
+
     transform:translateX(-50%);
+
     cursor:ns-resize;
 }
 
-/* ROTATE */
+/* =======================
+   ROTATION
+======================= */
+
 .rotateBtn{
+
     width:14px;
     height:14px;
-    background:orange;
-    position:absolute;
-    top:-6px;
-    left:-6px;
+
     border-radius:50%;
+
+    background:orange;
+
+    position:absolute;
+
+    top:-7px;
+    left:-7px;
+
     cursor:grab;
 }
 
-/* PRINT */
+/* =======================
+   MODELES
+======================= */
+
+#modelsPanel{
+
+    display:none;
+
+    position:fixed;
+
+    top:80px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:700px;
+    height:500px;
+
+    background:white;
+
+    border:2px solid black;
+
+    z-index:999999;
+}
+
+#modelsHeader{
+
+    height:50px;
+
+    background:#222;
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 15px;
+}
+
+#modelsList{
+
+    padding:10px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fill,150px);
+
+    gap:10px;
+
+    overflow:auto;
+
+    height:440px;
+}
+
+.modelCard{
+
+    height:100px;
+
+    border:1px solid #999;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#eee;
+
+    cursor:grab;
+
+    user-select:none;
+}
+
+/* =======================
+   PRINT
+======================= */
+
 @media print{
 
     body{
         background:white;
     }
 
-    #trash,.toolbar{
+    #trash,
+    .toolbar,
+    #modelsPanel{
+        display:none !important;
+    }
+
+    .handleW,
+    .handleH,
+    .rotateBtn{
         display:none !important;
     }
 
@@ -129,40 +292,62 @@ body{
         visibility:hidden;
     }
 
-    #page,#page *{
+    #page,
+    #page *{
         visibility:visible;
     }
 
     #page{
+
         position:absolute;
+
         left:0;
         top:0;
+
         margin:0;
     }
 
     .fold{
         display:none !important;
     }
+
 }
+
 </style>
 </head>
 
 <body>
 
-<!-- TRASH -->
-<div id="trash">🗑️ Poubelle</div>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
-    <input type="file" id="file">
-    <button id="txt">Texte</button>
-    <button onclick="window.print()">Imprimer</button>
+<div id="trash">
+🗑️ Poubelle
 </div>
 
-<!-- PAGE -->
+<div class="toolbar">
+
+<input type="file" id="file">
+
+<button id="txt">
+Ajouter texte
+</button>
+
+<button onclick="window.print()">
+Imprimer
+</button>
+
+<button id="saveModel">
+💾 Sauvegarder modèle
+</button>
+
+<button id="modelsBtn">
+📁 Modèles
+</button>
+
+</div>
+
 <div id="page">
 
-    <!-- GRILLE -->
+    <!-- lignes rouges -->
+
     <div class="fold v" style="left:25%"></div>
     <div class="fold v" style="left:50%"></div>
     <div class="fold v" style="left:75%"></div>
@@ -173,185 +358,805 @@ body{
 
 </div>
 
+<div id="modelsPanel">
+
+    <div id="modelsHeader">
+
+        <span>Mes modèles</span>
+
+        <button id="closeModels">
+            Fermer
+        </button>
+
+    </div>
+
+    <div id="modelsList"></div>
+
+</div>
+
+<!-- ICI TU COLLERAS LE JS PARTIE 1 -->
 <script>
 
-const page=document.getElementById("page");
-const trash=document.getElementById("trash");
+const page = document.getElementById("page");
+const trash = document.getElementById("trash");
 
-let drag=null,offsetX=0,offsetY=0;
-let resizing=null,mode=null,startX=0,startY=0,startW=0,startH=0;
+let drag = null;
 
-/* DRAG */
+let offsetX = 0;
+let offsetY = 0;
+
+let resizing = null;
+let resizeMode = null;
+
+let startW = 0;
+let startH = 0;
+
+let startX = 0;
+let startY = 0;
+
+/* =======================
+   SELECTION
+======================= */
+
+let selected = null;
+
+function select(el){
+
+    document
+    .querySelectorAll(".selected")
+    .forEach(e=>e.classList.remove("selected"));
+
+    selected = el;
+
+    if(el){
+        el.classList.add("selected");
+    }
+
+}
+
+/* =======================
+   TEXTE
+======================= */
+
+function updateTextSize(el){
+
+    if(!el.classList.contains("text"))
+        return;
+
+    const size =
+        Math.max(
+            8,
+            Math.min(
+                el.offsetWidth,
+                el.offsetHeight
+            ) / 2
+        );
+
+    el.style.fontSize =
+        size + "px";
+}
+
+/* =======================
+   DRAG
+======================= */
+
 function makeDraggable(el){
 
-    el.onmousedown=(e)=>{
+    el.addEventListener("mousedown",(e)=>{
 
-        if(e.target.classList.contains("handleW")||
-           e.target.classList.contains("handleH")||
-           e.target.classList.contains("rotateBtn")) return;
+        if(
+            e.target.classList.contains("handleW")
+            ||
+            e.target.classList.contains("handleH")
+            ||
+            e.target.classList.contains("rotateBtn")
+        ){
+            return;
+        }
 
-        drag=el;
+        select(el);
 
-        const r=el.getBoundingClientRect();
-        const p=page.getBoundingClientRect();
+        drag = el;
 
-        offsetX=e.clientX-r.left;
-        offsetY=e.clientY-r.top;
-    };
+        const r =
+            el.getBoundingClientRect();
+
+        const p =
+            page.getBoundingClientRect();
+
+        offsetX =
+            e.clientX - r.left;
+
+        offsetY =
+            e.clientY - r.top;
+
+    });
+
 }
 
-/* MOVE */
-document.onmousemove=(e)=>{
+/* =======================
+   ROTATION
+======================= */
 
-    const p=page.getBoundingClientRect();
-
-    if(drag){
-
-        drag.style.left=(e.clientX-p.left-offsetX)+"px";
-        drag.style.top=(e.clientY-p.top-offsetY)+"px";
-
-        const t=trash.getBoundingClientRect();
-        trash.classList.toggle("active",
-            e.clientX>t.left&&e.clientX<t.right&&
-            e.clientY>t.top&&e.clientY<t.bottom
-        );
-    }
-
-    if(resizing&&mode==="w"){
-        resizing.style.width=startW+(e.clientX-startX)+"px";
-    }
-
-    if(resizing&&mode==="h"){
-        resizing.style.height=startH+(e.clientY-startY)+"px";
-    }
-};
-
-/* UP */
-document.onmouseup=()=>{
-
-    if(drag){
-
-        const t=trash.getBoundingClientRect();
-        const r=drag.getBoundingClientRect();
-
-        if(r.left<t.right&&r.right>t.left&&r.top<t.bottom&&r.bottom>t.top){
-            drag.remove();
-        }
-    }
-
-    drag=null;
-    resizing=null;
-    mode=null;
-    trash.classList.remove("active");
-};
-
-/* ROTATE */
 function addRotate(el){
 
-    let angle=0;
+    let angle = 0;
 
-    const btn=document.createElement("div");
-    btn.className="rotateBtn";
+    const btn =
+        document.createElement("div");
+
+    btn.className =
+        "rotateBtn";
+
     el.appendChild(btn);
 
-    btn.onmousedown=(e)=>{
+    btn.addEventListener(
+        "mousedown",
+        (e)=>{
 
-        e.stopPropagation();
-        const startX=e.clientX;
-        const startAngle=angle;
+            e.stopPropagation();
 
-        document.onmousemove=(e2)=>{
+            const start =
+                e.clientX;
 
-            const dx=e2.clientX-startX;
-            angle=startAngle+dx;
+            const base =
+                angle;
 
-            el.style.transform=`rotate(${angle}deg)`;
-        };
+            function move(ev){
 
-        document.onmouseup=()=>{
-            document.onmousemove=null;
-        };
-    };
+                angle =
+                    base +
+                    (ev.clientX - start);
+
+                el.style.transform =
+                    `rotate(${angle}deg)`;
+            }
+
+            function up(){
+
+                document.removeEventListener(
+                    "mousemove",
+                    move
+                );
+
+                document.removeEventListener(
+                    "mouseup",
+                    up
+                );
+            }
+
+            document.addEventListener(
+                "mousemove",
+                move
+            );
+
+            document.addEventListener(
+                "mouseup",
+                up
+            );
+
+        }
+    );
+
 }
 
-/* RESIZE + ROTATE */
-function addTools(el){
+/* =======================
+   HANDLES
+======================= */
 
-    const w=document.createElement("div");
-    w.className="handleW";
+function addHandles(el){
 
-    const h=document.createElement("div");
-    h.className="handleH";
+    const handleW =
+        document.createElement("div");
 
-    el.appendChild(w);
-    el.appendChild(h);
+    handleW.className =
+        "handleW";
 
-    w.onmousedown=(e)=>{
-        resizing=el;
-        mode="w";
-        startW=el.offsetWidth;
-        startX=e.clientX;
-        e.stopPropagation();
-    };
+    const handleH =
+        document.createElement("div");
 
-    h.onmousedown=(e)=>{
-        resizing=el;
-        mode="h";
-        startH=el.offsetHeight;
-        startY=e.clientY;
-        e.stopPropagation();
-    };
+    handleH.className =
+        "handleH";
+
+    el.appendChild(handleW);
+    el.appendChild(handleH);
+
+    handleW.addEventListener(
+        "mousedown",
+        (e)=>{
+
+            e.stopPropagation();
+
+            resizing = el;
+
+            resizeMode = "w";
+
+            startW =
+                el.offsetWidth;
+
+            startX =
+                e.clientX;
+
+        }
+    );
+
+    handleH.addEventListener(
+        "mousedown",
+        (e)=>{
+
+            e.stopPropagation();
+
+            resizing = el;
+
+            resizeMode = "h";
+
+            startH =
+                el.offsetHeight;
+
+            startY =
+                e.clientY;
+
+        }
+    );
 
     addRotate(el);
+
 }
 
-/* TEXT */
-document.getElementById("txt").onclick=()=>{
+/* =======================
+   IMAGE
+======================= */
 
-    const t=document.createElement("div");
-    t.className="item text";
-    t.contentEditable=true;
-    t.innerText="Texte";
-
-    t.style.left="50px";
-    t.style.top="50px";
-
-    page.appendChild(t);
-    makeDraggable(t);
-    addTools(t);
-};
-
-/* IMAGE */
 function createImage(src){
 
-    const box=document.createElement("div");
-    box.className="item image";
+    const box =
+        document.createElement("div");
 
-    box.style.left="80px";
-    box.style.top="80px";
+    box.className =
+        "item image";
 
-    const img=document.createElement("img");
-    img.src=src;
+    box.style.left =
+        "100px";
+
+    box.style.top =
+        "100px";
+
+    const img =
+        document.createElement("img");
+
+    img.src = src;
 
     box.appendChild(img);
 
     page.appendChild(box);
+
+    addHandles(box);
+
     makeDraggable(box);
-    addTools(box);
+
 }
 
-/* FILE */
-document.getElementById("file").onchange=(e)=>{
+/* =======================
+   AJOUT TEXTE
+======================= */
 
-    const f=e.target.files[0];
-    if(!f)return;
+document
+.getElementById("txt")
+.onclick = ()=>{
 
-    const r=new FileReader();
-    r.onload=()=>createImage(r.result);
-    r.readAsDataURL(f);
+    const t =
+        document.createElement("div");
+
+    t.className =
+        "item text";
+
+    t.contentEditable =
+        true;
+
+    t.innerText =
+        "Texte";
+
+    t.style.left =
+        "50px";
+
+    t.style.top =
+        "50px";
+
+    page.appendChild(t);
+
+    addHandles(t);
+
+    makeDraggable(t);
+
+    updateTextSize(t);
+
 };
+
+/* =======================
+   UPLOAD IMAGE
+======================= */
+
+document
+.getElementById("file")
+.onchange = (e)=>{
+
+    const f =
+        e.target.files[0];
+
+    if(!f) return;
+
+    const r =
+        new FileReader();
+
+    r.onload = ()=>{
+
+        createImage(
+            r.result
+        );
+
+    };
+
+    r.readAsDataURL(f);
+
+};
+
+/* =======================
+   MOUSEMOVE
+======================= */
+
+document.addEventListener(
+    "mousemove",
+    (e)=>{
+
+        const p =
+            page.getBoundingClientRect();
+
+        if(drag){
+
+            drag.style.left =
+                (
+                    e.clientX
+                    -
+                    p.left
+                    -
+                    offsetX
+                ) + "px";
+
+            drag.style.top =
+                (
+                    e.clientY
+                    -
+                    p.top
+                    -
+                    offsetY
+                ) + "px";
+
+            const t =
+                trash.getBoundingClientRect();
+
+            trash.classList.toggle(
+                "active",
+
+                e.clientX > t.left
+                &&
+                e.clientX < t.right
+                &&
+                e.clientY > t.top
+                &&
+                e.clientY < t.bottom
+            );
+
+        }
+
+        if(
+            resizing
+            &&
+            resizeMode==="w"
+        ){
+
+            resizing.style.width =
+                (
+                    startW
+                    +
+                    (
+                        e.clientX
+                        -
+                        startX
+                    )
+                ) + "px";
+
+            updateTextSize(
+                resizing
+            );
+
+        }
+
+        if(
+            resizing
+            &&
+            resizeMode==="h"
+        ){
+
+            resizing.style.height =
+                (
+                    startH
+                    +
+                    (
+                        e.clientY
+                        -
+                        startY
+                    )
+                ) + "px";
+
+            updateTextSize(
+                resizing
+            );
+
+        }
+
+    }
+);
+
+/* =======================
+   MOUSEUP
+======================= */
+
+document.addEventListener(
+    "mouseup",
+    ()=>{
+
+        if(drag){
+
+            const t =
+                trash.getBoundingClientRect();
+
+            const r =
+                drag.getBoundingClientRect();
+
+            const overlap =
+
+                r.left < t.right
+                &&
+                r.right > t.left
+                &&
+                r.top < t.bottom
+                &&
+                r.bottom > t.top;
+
+            if(overlap){
+
+                drag.remove();
+
+            }
+
+        }
+
+        drag = null;
+
+        resizing = null;
+
+        resizeMode = null;
+
+        trash.classList.remove(
+            "active"
+        );
+
+    }
+);
 
 </script>
 
+<!-- PUIS LE JS PARTIE 2 -->
+<script>
+
+/* =======================
+   MODELES
+======================= */
+
+const MODELS_KEY =
+    "brainrot_models";
+
+let draggedModel =
+    null;
+
+/* =======================
+   OUVRIR PANEL
+======================= */
+
+document
+.getElementById("modelsBtn")
+.addEventListener(
+    "click",
+    ()=>{
+
+        refreshModels();
+
+        document
+        .getElementById(
+            "modelsPanel"
+        )
+        .style.display =
+            "block";
+
+    }
+);
+
+/* =======================
+   FERMER PANEL
+======================= */
+
+document
+.getElementById(
+    "closeModels"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById(
+            "modelsPanel"
+        )
+        .style.display =
+            "none";
+
+    }
+);
+
+/* =======================
+   SAUVEGARDE MODELE
+======================= */
+
+document
+.getElementById(
+    "saveModel"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        const name =
+            prompt(
+                "Nom du modèle ?"
+            );
+
+        if(!name)
+            return;
+
+        const models =
+            JSON.parse(
+                localStorage.getItem(
+                    MODELS_KEY
+                ) || "[]"
+            );
+
+        models.push({
+
+            id:
+                Date.now(),
+
+            name:
+                name,
+
+            html:
+                page.innerHTML
+
+        });
+
+        localStorage.setItem(
+            MODELS_KEY,
+            JSON.stringify(
+                models
+            )
+        );
+
+        refreshModels();
+
+        alert(
+            "Modèle sauvegardé"
+        );
+
+    }
+);
+
+/* =======================
+   AFFICHER MODELES
+======================= */
+
+function refreshModels(){
+
+    const list =
+        document.getElementById(
+            "modelsList"
+        );
+
+    list.innerHTML = "";
+
+    const models =
+        JSON.parse(
+            localStorage.getItem(
+                MODELS_KEY
+            ) || "[]"
+        );
+
+    models.forEach(
+        model=>{
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "modelCard";
+
+            card.innerText =
+                model.name;
+
+            card.draggable =
+                true;
+
+            /* charger */
+
+            card.addEventListener(
+                "click",
+                ()=>{
+
+                    if(
+                        !confirm(
+                            "Charger ce modèle ?"
+                        )
+                    ){
+                        return;
+                    }
+
+                    page.innerHTML =
+                        model.html;
+
+                    restoreObjects();
+
+                    document
+                    .getElementById(
+                        "modelsPanel"
+                    )
+                    .style.display =
+                        "none";
+
+                }
+            );
+
+            /* drag */
+
+            card.addEventListener(
+                "dragstart",
+                ()=>{
+
+                    draggedModel =
+                        model.id;
+
+                }
+            );
+
+            list.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+/* =======================
+   DELETE MODEL
+======================= */
+
+trash.addEventListener(
+    "dragover",
+    (e)=>{
+
+        e.preventDefault();
+
+    }
+);
+
+trash.addEventListener(
+    "drop",
+    (e)=>{
+
+        e.preventDefault();
+
+        if(
+            draggedModel
+            === null
+        ){
+            return;
+        }
+
+        let models =
+            JSON.parse(
+                localStorage.getItem(
+                    MODELS_KEY
+                ) || "[]"
+            );
+
+        models =
+            models.filter(
+                m =>
+                m.id
+                !=
+                draggedModel
+            );
+
+        localStorage.setItem(
+            MODELS_KEY,
+            JSON.stringify(
+                models
+            )
+        );
+
+        draggedModel =
+            null;
+
+        refreshModels();
+
+    }
+);
+
+/* =======================
+   RESTORE
+======================= */
+
+function restoreObjects(){
+
+    document
+    .querySelectorAll(
+        ".item"
+    )
+    .forEach(
+        el=>{
+
+            if(
+                !el.querySelector(
+                    ".handleW"
+                )
+            ){
+
+                addHandles(
+                    el
+                );
+
+            }
+
+            makeDraggable(
+                el
+            );
+
+            if(
+                el.classList.contains(
+                    "text"
+                )
+            ){
+
+                updateTextSize(
+                    el
+                );
+
+            }
+
+        }
+    );
+
+}
+
+/* =======================
+   LOAD START
+======================= */
+
+refreshModels();
+
+</script>
+
+</body>
+</html>
 </body>
 </html>
