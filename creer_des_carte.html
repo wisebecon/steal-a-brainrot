@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor</title>
+
+<style>
+body{
+    margin:0;
+    background:black;
+    font-family:Arial;
+}
+
+/* 🗑️ POUBELLE */
+#trash{
+    height:60px;
+    background:#222;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+#trash.active{ background:red; }
+
+/* TOOLBAR */
+.toolbar{
+    background:#111;
+    padding:10px;
+    display:flex;
+    gap:10px;
+}
+
+/* PAGE A4 PAYSAGE */
+#page{
+    width:990px;
+    height:700px;
+    background:white;
+    margin:20px auto;
+    position:relative;
+    overflow:hidden;
+}
+
+/* GRILLE */
+.fold{
+    position:absolute;
+    background:red;
+    pointer-events:none;
+    z-index:1;
+}
+.v{ width:2px; height:100%; top:0; }
+.h{ height:2px; width:100%; left:0; }
+
+/* ITEMS */
+.item{
+    position:absolute;
+    z-index:2;
+    transform-origin:center;
+}
+
+.text{
+    min-width:60px;
+    min-height:30px;
+    padding:5px;
+    cursor:move;
+    display:inline-block;
+}
+
+.image{
+    width:150px;
+    height:150px;
+    overflow:hidden;
+    cursor:move;
+}
+
+.image img{
+    width:100%;
+    height:100%;
+    object-fit:fill;
+    pointer-events:none;
+}
+
+/* HANDLES */
+.handleW,.handleH{
+    width:12px;
+    height:12px;
+    background:#2196f3;
+    position:absolute;
+}
+
+.handleW{
+    right:-6px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:ew-resize;
+}
+
+.handleH{
+    bottom:-6px;
+    left:50%;
+    transform:translateX(-50%);
+    cursor:ns-resize;
+}
+
+/* ROTATE */
+.rotateBtn{
+    width:14px;
+    height:14px;
+    background:orange;
+    position:absolute;
+    top:-6px;
+    left:-6px;
+    border-radius:50%;
+    cursor:grab;
+}
+
+/* PRINT */
+@media print{
+
+    body{
+        background:white;
+    }
+
+    #trash,.toolbar{
+        display:none !important;
+    }
+
+    body *{
+        visibility:hidden;
+    }
+
+    #page,#page *{
+        visibility:visible;
+    }
+
+    #page{
+        position:absolute;
+        left:0;
+        top:0;
+        margin:0;
+    }
+
+    .fold{
+        display:none !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- TRASH -->
+<div id="trash">🗑️ Poubelle</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <input type="file" id="file">
+    <button id="txt">Texte</button>
+    <button onclick="window.print()">Imprimer</button>
+</div>
+
+<!-- PAGE -->
+<div id="page">
+
+    <!-- GRILLE -->
+    <div class="fold v" style="left:25%"></div>
+    <div class="fold v" style="left:50%"></div>
+    <div class="fold v" style="left:75%"></div>
+
+    <div class="fold h" style="top:25%"></div>
+    <div class="fold h" style="top:50%"></div>
+    <div class="fold h" style="top:75%"></div>
+
+</div>
+
+<script>
+
+const page=document.getElementById("page");
+const trash=document.getElementById("trash");
+
+let drag=null,offsetX=0,offsetY=0;
+let resizing=null,mode=null,startX=0,startY=0,startW=0,startH=0;
+
+/* DRAG */
+function makeDraggable(el){
+
+    el.onmousedown=(e)=>{
+
+        if(e.target.classList.contains("handleW")||
+           e.target.classList.contains("handleH")||
+           e.target.classList.contains("rotateBtn")) return;
+
+        drag=el;
+
+        const r=el.getBoundingClientRect();
+        const p=page.getBoundingClientRect();
+
+        offsetX=e.clientX-r.left;
+        offsetY=e.clientY-r.top;
+    };
+}
+
+/* MOVE */
+document.onmousemove=(e)=>{
+
+    const p=page.getBoundingClientRect();
+
+    if(drag){
+
+        drag.style.left=(e.clientX-p.left-offsetX)+"px";
+        drag.style.top=(e.clientY-p.top-offsetY)+"px";
+
+        const t=trash.getBoundingClientRect();
+        trash.classList.toggle("active",
+            e.clientX>t.left&&e.clientX<t.right&&
+            e.clientY>t.top&&e.clientY<t.bottom
+        );
+    }
+
+    if(resizing&&mode==="w"){
+        resizing.style.width=startW+(e.clientX-startX)+"px";
+    }
+
+    if(resizing&&mode==="h"){
+        resizing.style.height=startH+(e.clientY-startY)+"px";
+    }
+};
+
+/* UP */
+document.onmouseup=()=>{
+
+    if(drag){
+
+        const t=trash.getBoundingClientRect();
+        const r=drag.getBoundingClientRect();
+
+        if(r.left<t.right&&r.right>t.left&&r.top<t.bottom&&r.bottom>t.top){
+            drag.remove();
+        }
+    }
+
+    drag=null;
+    resizing=null;
+    mode=null;
+    trash.classList.remove("active");
+};
+
+/* ROTATE */
+function addRotate(el){
+
+    let angle=0;
+
+    const btn=document.createElement("div");
+    btn.className="rotateBtn";
+    el.appendChild(btn);
+
+    btn.onmousedown=(e)=>{
+
+        e.stopPropagation();
+        const startX=e.clientX;
+        const startAngle=angle;
+
+        document.onmousemove=(e2)=>{
+
+            const dx=e2.clientX-startX;
+            angle=startAngle+dx;
+
+            el.style.transform=`rotate(${angle}deg)`;
+        };
+
+        document.onmouseup=()=>{
+            document.onmousemove=null;
+        };
+    };
+}
+
+/* RESIZE + ROTATE */
+function addTools(el){
+
+    const w=document.createElement("div");
+    w.className="handleW";
+
+    const h=document.createElement("div");
+    h.className="handleH";
+
+    el.appendChild(w);
+    el.appendChild(h);
+
+    w.onmousedown=(e)=>{
+        resizing=el;
+        mode="w";
+        startW=el.offsetWidth;
+        startX=e.clientX;
+        e.stopPropagation();
+    };
+
+    h.onmousedown=(e)=>{
+        resizing=el;
+        mode="h";
+        startH=el.offsetHeight;
+        startY=e.clientY;
+        e.stopPropagation();
+    };
+
+    addRotate(el);
+}
+
+/* TEXT */
+document.getElementById("txt").onclick=()=>{
+
+    const t=document.createElement("div");
+    t.className="item text";
+    t.contentEditable=true;
+    t.innerText="Texte";
+
+    t.style.left="50px";
+    t.style.top="50px";
+
+    page.appendChild(t);
+    makeDraggable(t);
+    addTools(t);
+};
+
+/* IMAGE */
+function createImage(src){
+
+    const box=document.createElement("div");
+    box.className="item image";
+
+    box.style.left="80px";
+    box.style.top="80px";
+
+    const img=document.createElement("img");
+    img.src=src;
+
+    box.appendChild(img);
+
+    page.appendChild(box);
+    makeDraggable(box);
+    addTools(box);
+}
+
+/* FILE */
+document.getElementById("file").onchange=(e)=>{
+
+    const f=e.target.files[0];
+    if(!f)return;
+
+    const r=new FileReader();
+    r.onload=()=>createImage(r.result);
+    r.readAsDataURL(f);
+};
+
+</script>
+
+</body>
+</html>
